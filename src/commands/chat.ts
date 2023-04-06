@@ -130,7 +130,7 @@ export const slashExecute = async (
   client: Client,
   interaction: CommandInteraction
 ) => {
-  let requestMessage = String(interaction.options.get("message", true));
+  const requestMessage = String(interaction.options.get("message", true));
 
   if (requestMessage.length > MAX_TEXT_LENGTH)
     return interaction.editReply({
