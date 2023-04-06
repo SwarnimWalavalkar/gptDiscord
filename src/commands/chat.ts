@@ -1,12 +1,21 @@
-import chatGPT from "../gpt";
+import getChatCompletion from "../gpt";
 
 import config from "../config";
 
-const { MAX_THREAD_CONTEXT, MAX_TEXT_LENGTH } = config;
+const {
+  MAX_THREAD_CONTEXT,
+  MAX_TEXT_LENGTH,
+  OPENAI_API_MODEL,
+  OPENAI_API_MAX_TOKEN,
+} = config;
 
 import { Client, Message, CommandInteraction } from "discord.js";
+import {
+  ChatCompletionRequestMessage,
+  CreateChatCompletionRequest,
+} from "openai";
 
-const DEFAULT_ERR_MSG = "Something went wrong, please try again later.";
+export const DEFAULT_ERR_MSG = "Something went wrong, please try again later.";
 
 export const name = "chat";
 export const aliases = ["c"];
@@ -21,6 +30,9 @@ export const options = [
     required: true,
   },
 ];
+
+const DEFAULT_CHAT_PROMPT =
+  "You are a helpful large language model assistant built by Swarnim and Goutham powered by Open AI's GPT-3.5 Turbo model.";
 
 export const execute = async (
   client: Client,
@@ -83,8 +95,7 @@ export const execute = async (
       // Add filtered reply messages to requestMessage
       requestMessage += filterReply.join("\n") + "\n";
     } catch (error) {
-      console.log("ChatGPT: Search reply error");
-      console.log(error);
+      console.error("ChatGPT: Search reply error", error);
     }
   }
 
@@ -92,7 +103,7 @@ export const execute = async (
   requestMessage += args.join(" ");
 
   try {
-    let result = await chatGPT(requestMessage);
+    let result = await getResponse(requestMessage);
 
     if (result === "") result = DEFAULT_ERR_MSG; // Discord can't send empty message
 
@@ -128,7 +139,7 @@ export const slashExecute = async (
     });
 
   try {
-    let result = await chatGPT(requestMessage);
+    let result = await getResponse(requestMessage);
 
     if (result === "") result = DEFAULT_ERR_MSG;
 
@@ -149,4 +160,19 @@ export const slashExecute = async (
       allowedMentions: { repliedUser: false },
     });
   }
+};
+
+const getResponse = async (message) => {
+  const messages: Array<ChatCompletionRequestMessage> = [
+    { role: "user", content: DEFAULT_CHAT_PROMPT },
+    { role: "user", content: message },
+  ];
+
+  const completionRequest: CreateChatCompletionRequest = {
+    model: OPENAI_API_MODEL,
+    max_tokens: OPENAI_API_MAX_TOKEN,
+    messages,
+  };
+
+  return await getChatCompletion(completionRequest);
 };

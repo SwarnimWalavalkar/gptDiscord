@@ -10,7 +10,7 @@ export default async (client: Client, int: Interaction) => {
       console.log(
         `(\x1B[2m${int.guild?.name}\x1B[0m) ${int.user.username} : /${int.commandName}`
       );
-      await int.deferReply();
+      await int.deferReply(); 
       cmd.slashExecute(client, int);
     }
   }
